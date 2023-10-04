@@ -1,0 +1,9 @@
+CREATE TABLE HistorialRefreshToken (
+    idHistorialToken INT PRIMARY KEY IDENTITY,
+    idUser INT REFERENCES Users(idUser),
+    token VARCHAR(500),
+    refreshToken VARCHAR(200),
+    date_Creation DATETIME,
+    date_Expiration DATETIME,
+    isActive AS (IIF(date_Expiration < GETDATE(), CONVERT(BIT, 0), CONVERT(BIT, 1)))
+);
