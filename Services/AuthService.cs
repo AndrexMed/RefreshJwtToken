@@ -1,4 +1,5 @@
-﻿using Microsoft.IdentityModel.Tokens;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using RefreshJwtToken.Models;
 using RefreshJwtToken.Models.Custom;
 using RefreshJwtToken.Repository;
@@ -64,9 +65,24 @@ namespace RefreshJwtToken.Services
             return tokenCreated;
         }
 
-        public Task<AutorizacionResponse> ReturnRefreshToken(RefreshTokenRequest refreshTokenRequest)
+        public async Task<AutorizacionResponse> ReturnRefreshToken(RefreshTokenRequest refreshTokenRequest,
+                                                                    int idUser)
         {
-            throw new NotImplementedException();
+            var refreshTokenFounded = await _jwtContext
+                .HistorialRefreshTokens
+                .FirstOrDefaultAsync(p => p.Token == refreshTokenRequest.TokenExp &&
+                                          p.RefreshToken == refreshTokenRequest.RefreshToken &&
+                                          p.IdUser == idUser);
+
+            if (refreshTokenFounded == null)
+            {
+                return new AutorizacionResponse { Resultado = false, Mensaje = "Refresh Token Not Found" };
+            }
+
+            var refreshTokenCrated = GenerateRefreshToken();
+            var tokenCreated = GenerateToken(idUser.ToString());
+
+            return await SaveRefreshTokenHistory(idUser, tokenCreated, refreshTokenCrated);
         }
 
         private string GenerateRefreshToken()
